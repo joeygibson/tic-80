@@ -143,7 +143,7 @@ function TIC()
 	print("Score:",5,5,12)
 	print(score,40,5,4)
 	print("Lives:",195,5,12)
-	print(lives,230,5,4)
+	print(lives,227,5,4)
 	-- shrapnel
 	for _,s in pairs(shrapnel) do
 		spr(3,s.x,s.y)
