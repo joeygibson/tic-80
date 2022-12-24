@@ -92,8 +92,7 @@ function TIC()
 	
 	-- check if enemy has hit shrapnel
 	if hit_shrapnel() then
-		ex=-ex
-		ey=-ey
+		ey=144
 	end
 	
 	-- move enemy
