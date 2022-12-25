@@ -150,8 +150,9 @@ function TIC()
 		pix(star.x,star.y,12)
 	end
 	
-	rectb(0,0,240,136,2)
-	
+	rect(0,132,240,134,15)
+	rectb(0,0,240,136,2)	
+
 	print("Score:",5,5,12)
 	print(score,40,5,4)
 	print("Lives:",195,5,12)
