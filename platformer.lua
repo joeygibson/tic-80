@@ -9,21 +9,39 @@
 blobby={
 	x=0,
 	y=0,
-	speed=1
+	speed=1,
+	vx=0,
+	vy=0
 }
 
+gravity=0.2
+
 function moveBlobby()
-	if btn(0) then blobby.y=blobby.y-blobby.speed end
-	if btn(1) then blobby.y=blobby.y+blobby.speed end
-	if btn(2) then blobby.x=blobby.x-blobby.speed end
-	if btn(3) then blobby.x=blobby.x+blobby.speed end
+	if btn(2) then 
+		blobby.vx=-1*blobby.speed 
+	elseif btn(3) then 
+		blobby.vx=blobby.speed 
+	else
+		blobby.vx=0
+	end
+
+	if btnp(4) and blobby.vy == 0 then
+		blobby.vy=-2.5
+	elseif blobby.y > 120 then
+		blobby.vy=0
+	else
+		blobby.vy = blobby.vy + gravity
+	end
+
+	blobby.x = blobby.x+blobby.vx
+	blobby.y = blobby.y+blobby.vy
 end
 
 function checkLimits()
-	if blobby.y<0 then blobby.y=0 end
-	if blobby.y>128 then blobby.y=128 end
 	if blobby.x<0 then blobby.x=0 end
 	if blobby.x>231 then blobby.x=231 end
+	if blobby.y<0 then blobby.y=0 end
+	if blobby.y>128 then blobby.y=128 end
 end
 
 function TIC()
