@@ -6,17 +6,32 @@
 -- version: 0.1
 -- script:  lua
 
-x=0;y=0;speed=1
+blobby={
+	x=0,
+	y=0,
+	speed=1
+}
+
+function moveBlobby()
+	if btn(0) then blobby.y=blobby.y-blobby.speed end
+	if btn(1) then blobby.y=blobby.y+blobby.speed end
+	if btn(2) then blobby.x=blobby.x-blobby.speed end
+	if btn(3) then blobby.x=blobby.x+blobby.speed end
+end
+
+function checkLimits()
+	if blobby.y<0 then blobby.y=0 end
+	if blobby.y>128 then blobby.y=128 end
+	if blobby.x<0 then blobby.x=0 end
+	if blobby.x>231 then blobby.x=231 end
+end
 
 function TIC()
 	cls()
+	moveBlobby()
+	checkLimits()
 	
-	if btn(0) then y=y-speed end
-	if btn(1) then y=y+speed end
-	if btn(2) then x=x-speed end
-	if btn(3) then x=x+speed end
-	
-	spr(256,x,y)
+	spr(256,blobby.x,blobby.y)
 end
 
 -- <SPRITES>
