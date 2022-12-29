@@ -11,7 +11,8 @@ blobby={
 	y=0,
 	speed=1,
 	vx=0,
-	vy=0
+	vy=0,
+	costume=256
 }
 
 slime={
@@ -24,20 +25,23 @@ slime={
 gravity=0.2
 
 function moveBlobby()
-	if btn(2) then 
-		blobby.vx=-1*blobby.speed 
-	elseif btn(3) then 
-		blobby.vx=blobby.speed 
-	else
-		blobby.vx=0
-	end
-
 	if btnp(0) and blobby.vy == 0 then
 		blobby.vy=-2.5
 	elseif blobby.y > 120 then
 		blobby.vy=0
 	else
 		blobby.vy = blobby.vy + gravity
+	end
+
+	if btn(2) then 
+		blobby.vx=-1*blobby.speed 
+		blobby.costume=262
+	elseif btn(3) then 
+		blobby.vx=blobby.speed 
+		blobby.costume=259
+	else
+		blobby.vx=0
+		blobby.costume=256
 	end
 
 	blobby.x = blobby.x+blobby.vx
@@ -58,9 +62,9 @@ function throwSlime()
 		if slime.x<0 or slime.x>232 then
 			slime.active=false
 		else
-			spr(320,slime.x,slime.y)
+			spr(320+t%30//20,slime.x,slime.y)
 		end
-	elseif btnp(4) then
+	elseif btnp(4) and blobby.vx ~= 0 then
 		slime.active=true
 		slime.vx=blobby.vx
 
@@ -76,17 +80,27 @@ end
 
 function TIC()
 	cls()
+
+	t=time()//10
+
 	moveBlobby()
 	checkLimits()
 
 	throwSlime()
 	
-	spr(256,blobby.x,blobby.y)
+	spr(blobby.costume+t%60//30,blobby.x,blobby.y,0)
 end
 
 -- <SPRITES>
 -- 000:00f00f0000f00f00003cc30022e33e222e2332e2e224422e0004400000f00f00
--- 064:0000000000000000000500000055500000050000000000000000000000000000
+-- 001:00d00d0000f00f00003cc30022e33e222ed33de2edd44dde000dd00000400400
+-- 003:00e22000002e2000f022e3ff04433c0004433c00f022e3ff002e200000e22000
+-- 004:00e2200000de200040dde3fd0d433c000d433c0040dde3fd00de200000e22000
+-- 006:00022e000002e200ff3e220f00c3344000c33440ff3e220f0002e20000022e00
+-- 007:00022e000002ed00df3edd0400c334d000c334d0df3edd040002ed0000022e00
+-- 064:0000000000000000000050000005560000565500000560000000000000000000
+-- 065:0000000000000000000560000056550000055600000050000000000000000000
+-- 066:0000000000000000000500000065500000556500000650000000000000000000
 -- </SPRITES>
 
 -- <WAVES>
