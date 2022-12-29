@@ -14,6 +14,13 @@ blobby={
 	vy=0
 }
 
+slime={
+	x=0,
+	y=0,
+	active=false,
+	vx=0
+}
+
 gravity=0.2
 
 function moveBlobby()
@@ -25,7 +32,7 @@ function moveBlobby()
 		blobby.vx=0
 	end
 
-	if btnp(4) and blobby.vy == 0 then
+	if btnp(0) and blobby.vy == 0 then
 		blobby.vy=-2.5
 	elseif blobby.y > 120 then
 		blobby.vy=0
@@ -44,16 +51,42 @@ function checkLimits()
 	if blobby.y>128 then blobby.y=128 end
 end
 
+function throwSlime()
+	if slime.active then
+		slime.x=slime.x+slime.vx*1.5
+
+		if slime.x<0 or slime.x>232 then
+			slime.active=false
+		else
+			spr(320,slime.x,slime.y)
+		end
+	elseif btnp(4) then
+		slime.active=true
+		slime.vx=blobby.vx
+
+		if blobby.vx>0 then
+			slime.x = blobby.x+9
+		else
+			slime.x = blobby.x-9
+		end
+
+		slime.y=blobby.y
+	end
+end
+
 function TIC()
 	cls()
 	moveBlobby()
 	checkLimits()
+
+	throwSlime()
 	
 	spr(256,blobby.x,blobby.y)
 end
 
 -- <SPRITES>
 -- 000:00f00f0000f00f00003cc30022e33e222e2332e2e224422e0004400000f00f00
+-- 064:0000000000000000000500000055500000050000000000000000000000000000
 -- </SPRITES>
 
 -- <WAVES>
