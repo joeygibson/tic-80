@@ -22,7 +22,28 @@ slime={
 	vx=0
 }
 
+fruits={}
+
 gravity=0.2
+init=true
+
+function setFruits(count)
+	for c=1,count do
+		local loc=randomLocation()
+		local myX=loc[1]
+		local myY=loc[2]
+
+		fruit={
+			x=myX,
+			y=myY,
+			active=true,
+			costume=math.random(304,306)
+		}
+
+		-- table.insert(fruits,fruit)
+		fruits[c]=fruit
+	end
+end
 
 function tileAt(x,y)
 	-- is tile at x,y a solid tile?
@@ -106,12 +127,28 @@ function throwSlime()
 	end
 end
 
-function TIC()
-	cls()
+function initialize()
+	setFruits(100)
+end
 
+function drawFruits()
+	for _,fruit in ipairs(fruits) do
+		spr(fruit.costume,fruit.x,fruit.y,0)
+	end
+end
+
+function TIC()
+	if init then
+		initialize()
+		init=false
+	end
+
+	cls()
+	
 	t=time()//10
 
 	map(0,0,30,17)
+	drawFruits()
 
 	moveBlobby()
 	checkLimits()
@@ -119,6 +156,26 @@ function TIC()
 	throwSlime()
 	
 	spr(blobby.costume+t%60//30,blobby.x,blobby.y,0)
+end
+
+function randomLocation()
+	solidHere = true
+	blobbyHereX = true
+	blobbyHereY = true
+
+	while solidHere or (blobbyHereX and blobbyHereY) do
+		newX=math.random(4,228)
+		newY=math.random(4,124)
+
+		blobbyHereX=blobby.x==newX
+		blobbyHereY=blobby.y==newY
+		solidHere=tileAt(newX,newY) or
+							tileAt(newX+8,newY) or
+							tileAt(newX,newY+8) or
+							tileAt(newX-8,newY+8)
+	end
+
+	return {newX, newY}
 end
 
 -- <TILES>
