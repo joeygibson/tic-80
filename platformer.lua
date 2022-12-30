@@ -12,8 +12,8 @@ HUD={
 }
 
 blobby={
-	x=0,
-	y=0,
+	x=230,
+	y=103,
 	speed=1,
 	vx=0,
 	vy=0,
@@ -29,9 +29,33 @@ slime={
 }
 
 fruits={}
+enemies={}
 
 gravity=0.2
 init=true
+
+function addEnemy(costume,x,y)
+	local enemy={
+		spawnX=x,
+		spawnY=y,
+		x=x,
+		y=y,
+		costume=costume,
+		active=true
+	}
+
+	table.insert(enemies,enemy)
+end
+
+function drawEnemies()
+	for _,e in ipairs(enemies) do
+		if e.active then
+			spr(e.costume,e.x,e.y,0)
+		else
+			spr(e.costume+5,e.x,e.y,0)
+		end
+	end
+end
 
 function hud()
 	rect(0,0,240,8,0)
@@ -60,7 +84,13 @@ function collision(px,py,ox,oy)
 				hitY=true
 	end
 
-	return hitX and hitY
+	if hitX and hitY and py<oy then
+		return "top hit"
+	elseif hitX and hitY then
+		return "hit"
+	else
+		return false
+	end
 end
 
 function collectFruit()
@@ -87,8 +117,7 @@ function setFruits(count)
 			costume=math.random(304,306)
 		}
 
-		-- table.insert(fruits,fruit)
-		fruits[c]=fruit
+		table.insert(fruits,fruit)
 	end
 end
 
@@ -176,6 +205,8 @@ end
 
 function initialize()
 	setFruits(5)
+	addEnemy(352,20,103)
+	addEnemy(352,32,16)
 end
 
 function drawFruits()
@@ -203,8 +234,10 @@ function TIC()
 	moveBlobby()
 	checkLimits()
 
+	drawEnemies()
 	collectFruit()
 	throwSlime()
+	hitEnemy()
 	
 	spr(blobby.costume+t%60//30,blobby.x,blobby.y,0)
 end
@@ -227,6 +260,20 @@ function randomLocation()
 	end
 
 	return {newX, newY}
+end
+
+function hitEnemy()
+	for _,e in ipairs(enemies) do
+		local hit=collision(blobby.x,blobby.y,e.x,e.y)
+		
+		if hit =="top hit" and e.active then
+			e.active=false		
+		elseif hit=="hit" and e.active then
+			blobby.lives=blobby.lives-1
+			blobby.x=230
+			blobby.y=103
+		end 
+	end
 end
 
 -- <TILES>
@@ -310,6 +357,24 @@ end
 -- 064:0000000000000000000050000005560000565500000560000000000000000000
 -- 065:0000000000000000000560000056550000055600000050000000000000000000
 -- 066:0000000000000000000500000065500000556500000650000000000000000000
+-- 096:000c00c000ccccc00cfcfc3cccccc333333cc333f3f3ccc33333c01c0000c00c
+-- 097:000c00c000ccccc00cfcfc3cccccc333333cc333f3f3ccc33333c01c000c00c0
+-- 098:0c00c0000ccccc00c3cfcfc0333ccccc333cc3333ccc3f3fc10c3333c00c0000
+-- 099:0c00c0000ccccc00c3cfcfc0333ccccc333cc3333ccc3f3fc10c33330c00c000
+-- 101:0000000000000000004444000444444066666666222222223333323304444440
+-- 103:00099000000cc00000cccc0000cccc0000cccc0000cccc0000cccc0000cccc00
+-- 112:000101000011110000f1f11111111111f1f11111111111110001111100001010
+-- 113:000101000011110000f1f11111111111f1f11111111111110001111100010100
+-- 114:0010100000111100111f1f001111111111111f1f111111111111100001010000
+-- 115:0010100000111100111f1f001111111111111f1f111111111111100000101000
+-- 117:0000000000000033000033440033443333443300443300003300000000000000
+-- 119:1110100010100000101010001110100000000100011101010101011001010101
+-- 128:022000000ccc00004cfc00000ccccccc0cddcccc0cccccc000cccc0000040400
+-- 129:022000000ccc00004cfc00000ccccccc0cddcccc0cccccc000cccc0000404000
+-- 130:000002200000ccc00000cfc4ccccccc0ccccddc00cccccc000cccc0000404000
+-- 131:000002200000ccc00000cfc4ccccccc0ccccddc00cccccc000cccc0000040400
+-- 133:003330000333330003333300033333000033300000030000000c000000ccc000
+-- 135:00cccc000cccccc00cc44cc0cc4444cccc4444ccccc44ccc0cccccc000cccc00
 -- </SPRITES>
 
 -- <MAP>
@@ -466,6 +531,6 @@ end
 -- </TRACKS>
 
 -- <PALETTE>
--- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
+-- 000:1a1c2cca5995b13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE>
 
