@@ -197,7 +197,11 @@ end
 
 function checkLimits()
 	if blobby.y<9 then blobby.y=9 end
-	if blobby.y>130 then lose() end
+	if blobby.y>130 then
+		blobby.lives=blobby.lives-1
+		blobby.x=blobby.spawnX
+		blobby.y=blobby.spawnY
+	end
 	if blobby.x<1 then blobby.x=231 end
 	if blobby.x>231 then blobby.x=0 end	
 end
@@ -218,7 +222,8 @@ function throwSlime()
 	end
 	
 	if btnp(4) and blobby.vx ~= 0 and
-		blobby.sTimer>20 then	
+		blobby.sTimer>20 then
+		sfx(0)
 		slime={
 			x=0,
 			y=0,
@@ -402,8 +407,10 @@ function hitEnemy()
 			e.active then
 			
 			if hit =="top hit" then
+				sfx(2)
 				e.active=false		
 			elseif hit=="hit" then
+				sfx(1)
 				blobby.lives=blobby.lives-1
 				blobby.x=blobby.spawnX
 				blobby.y=blobby.spawnY
@@ -415,6 +422,7 @@ function hitEnemy()
 		end
 		
 		if hitSlimes(e) then
+			sfx(3)
 			e.y=-20
 		end
 	end
@@ -827,7 +835,10 @@ end
 -- </WAVES>
 
 -- <SFX>
--- 000:000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000304000000000
+-- 000:01f001d001b001a001900170015001300110f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f101401000000000
+-- 001:00f000f000f000f000f000f000f000f000e000e000e000e000e000e000f000f000f000e000000000000000000000000000000000000000000000f000000000000000
+-- 002:0000001000100020003000400040005000500060006000700080009000a000a000b000c000d0000000d000d000d000e000e000e000f000f00000f000000000000000
+-- 003:000000000006000000000000000200000000000000050000000000000000000000050005000600060006000700070007000700070007000000000000200000000000
 -- </SFX>
 
 -- <TRACKS>
