@@ -12,20 +12,19 @@ HUD={
 }
 
 blobby={
+	spawnX=230,
+	spawnY=103,
 	x=230,
 	y=103,
 	speed=1,
 	vx=0,
 	vy=0,
 	costume=256,
-	lives=3
-}
-
-slime={
-	x=0,
-	y=0,
-	active=false,
-	vx=0
+	lives=3,
+	slimes={},
+	sTimer=0,
+	invincible=false,
+	iTimer=0
 }
 
 fruits={}
@@ -75,8 +74,10 @@ function hud()
 	rect(0,0,240,8,0)
 	local w=print("HANGRY BLOBBY!",1,1,5)
 	local w1=print("LEVEL "..HUD.level,w+5,1,4)
-	print("SCORE "..HUD.score,w+w1+10,1,6)
-
+	local w2=print("SCORE "..HUD.score,w+w1+10,1,6)
+	
+	spr(blobby.invincible,w+w1+w2+15,-1,0)
+	
 	for num=1,blobby.lives do
 		spr(288,240-(num*8),0,0)
 	end
@@ -196,17 +197,29 @@ function checkLimits()
 end
 
 function throwSlime()
-	if slime.active then
-		slime.x=slime.x+slime.vx*1.5
-
-		if slime.x<0 or slime.x>232 then
-			slime.active=false
-		else
-			spr(320+t%30//20,slime.x,slime.y,0)
+	blobby.sTimer=blobby.sTimer+1
+	
+	for _,slime in ipairs(blobby.slimes) do
+		if slime.active then
+			slime.x=slime.x+slime.vx*1.5
+	
+			if slime.x<0 or slime.x>232 then
+				slime.active=false
+			else
+				spr(320+t%60//20,slime.x,slime.y,0)
+			end
 		end
-	elseif btnp(4) and blobby.vx ~= 0 then
-		slime.active=true
-		slime.vx=blobby.vx
+	end
+	
+	if btnp(4) and blobby.vx ~= 0 and
+		blobby.sTimer>20 then	
+		slime={
+			x=0,
+			y=0,
+			active=true,
+			vx=blobby.vx
+		}
+		blobby.sTimer=0
 
 		if blobby.vx>0 then
 			slime.x = blobby.x+9
@@ -215,6 +228,7 @@ function throwSlime()
 		end
 
 		slime.y=blobby.y
+		table.insert(blobby.slimes,slime)
 	end
 end
 
@@ -259,7 +273,7 @@ function TIC()
 	throwSlime()
 	hitEnemy()
 	
-	spr(blobby.costume+t%60//30,blobby.x,blobby.y,0)
+	drawBlobby()
 end
 
 function randomLocation()
@@ -286,17 +300,25 @@ function hitEnemy()
 	for _,e in ipairs(enemies) do
 		local hit=collision(blobby.x,blobby.y,e.x,e.y)
 		
-		if hit =="top hit" and e.active then
-			e.active=false		
-		elseif hit=="hit" and e.active then
-			blobby.lives=blobby.lives-1
-			blobby.x=230
-			blobby.y=103
-			if e.motion=="ai" then
-				e.x=e.spawnX
-				e.y=e.spawnY
+		if not blobby.invincible and
+			e.active then
+			
+			if hit =="top hit" then
+				e.active=false		
+			elseif hit=="hit" then
+				blobby.lives=blobby.lives-1
+				blobby.x=230
+				blobby.y=103
+				if e.motion=="ai" then
+					e.x=e.spawnX
+					e.y=e.spawnY
+				end
 			end
-		end 
+		end
+		
+		if hitSlimes(e) then
+			e.y=-20
+		end
 	end
 end
 
@@ -334,6 +356,31 @@ function moveAi(sprite)
 		return 0
 	end
 end
+
+function hitSlimes(enemy)
+	for _,s in ipairs(blobby.slimes) do
+		hit=collision(enemy.x,enemy.y,s.x,s.y)
+		if hit and not enemy.active then
+			blobby.invincible=enemy.costume+5
+			return "hit"
+		end
+	end
+end
+
+function drawBlobby()
+	local iCostumeMod=0
+	if blobby.invincible and 
+		blobby.iTimer<500 then
+		iCostumeMod=16
+		blobby.iTimer=blobby.iTimer+1
+	else
+		blobby.invincible=false
+		blobby.iTimer=0
+	end
+	
+	spr(blobby.costume+iCostumeMod+t%60//30,blobby.x,blobby.y,0)
+end
+
 -- <TILES>
 -- 003:bbbbbeeebbbbeeefbbbeeeeebbbeeeeebeeeeeeebeeeeefeeeeeeeeeeeeeeeee
 -- 004:eeeeeeeeeeeeeeeceeeceeeefeeeeeefeeeeeeeeeeeeeceeeeeeeeeeeeeceeee
@@ -408,6 +455,12 @@ end
 -- 004:00e2200000de200040dde3fd0d433c000d433c0040dde3fd00de200000e22000
 -- 006:00022e000002e200ff3e220f00c3344000c33440ff3e220f0002e20000022e00
 -- 007:00022e000002ed00df3edd0400c334d000c334d0df3edd040002ed0000022e00
+-- 016:00f00f0000f00f00003cc30099c33c999c9339c9c99bb99c000bb00000f00f00
+-- 017:00d00d0000f00f00003cc30099c33c999c9339c9c99bb99c000bb00000400400
+-- 019:00c99000009c9000f099c3ff0bb33c000bb33c00f099c3ff009c900000c99000
+-- 020:00c99000009c90004099c3fd0bb33c000bb33c004099c3fd009c900000c99000
+-- 022:00099c000009c900ff3c990f00c33bb000c33bb0ff3c990f0009c90000099c00
+-- 023:00099c000009c900df3c990400c33bb000c33bb0df3c99040009c90000099c00
 -- 032:0000000002202200222222202222222002222200002220000002000000000000
 -- 048:000050000005000001111110001111d000011d000001d0000000000000000000
 -- 049:0000000000000000044000000c4000000c44400000cc44000000c40000000000
