@@ -34,14 +34,15 @@ enemies={}
 gravity=0.2
 init=true
 
-function addEnemy(costume,x,y)
+function addEnemy(costume,x,y,motion)
 	local enemy={
 		spawnX=x,
 		spawnY=y,
 		x=x,
 		y=y,
 		costume=costume,
-		active=true
+		active=true,
+		motion=motion
 	}
 
 	table.insert(enemies,enemy)
@@ -49,10 +50,23 @@ end
 
 function drawEnemies()
 	for _,e in ipairs(enemies) do
+		local c=e.costume
+		
 		if e.active then
-			spr(e.costume,e.x,e.y,0)
+			if e.motion=="none" then
+				spr(c,e.x,e.y,0)
+			elseif e.motion=="march" then
+				c=c+moveMarch(e)
+				spr(c+t%60//30,e.x,e.y,0)
+			elseif e.motion=="drop" then
+				moveDrop(e)
+				spr(c,e.x,e.y,0,1,2)
+			elseif e.motion=="ai" then
+				c=c+moveAi(e)
+				spr(c+t%60//30,e.x,e.y,0)
+			end
 		else
-			spr(e.costume+5,e.x,e.y,0)
+			spr(c+5,e.x,e.y,0)
 		end
 	end
 end
@@ -205,8 +219,13 @@ end
 
 function initialize()
 	setFruits(5)
-	addEnemy(352,20,103)
-	addEnemy(352,32,16)
+	
+	-- maybe have the type of motion
+	-- be based on the game level
+	addEnemy(352,20,103,"none")
+	addEnemy(352,32,16,"march")
+	addEnemy(352,150,10,"drop")
+	addEnemy(352,20,20,"ai")
 end
 
 function drawFruits()
@@ -276,6 +295,40 @@ function hitEnemy()
 	end
 end
 
+function moveMarch(sprite)
+	local count=t%500//10	-- 50
+	if count<25 then --move right
+		sprite.x=sprite.spawnX+count
+		return 2
+	else
+		sprite.x=sprite.spawnX+50-count
+		return 0
+	end
+end
+
+function moveDrop(sprite)
+	if sprite.y>136 then
+		sprite.active=false
+	else
+		sprite.y=sprite.y+1
+	end
+end
+
+function moveAi(sprite)
+	if blobby.y-sprite.y>0 then
+		sprite.y=sprite.y+.5
+	else
+		sprite.y=sprite.y-.5
+	end
+	
+	if blobby.x-sprite.x>0 then
+		sprite.x=sprite.x+.5
+		return 2
+	else
+		sprite.x=sprite.x-.5
+		return 0
+	end
+end
 -- <TILES>
 -- 003:bbbbbeeebbbbeeefbbbeeeeebbbeeeeebeeeeeeebeeeeefeeeeeeeeeeeeeeeee
 -- 004:eeeeeeeeeeeeeeeceeeceeeefeeeeeefeeeeeeeeeeeeeceeeeeeeeeeeeeceeee
