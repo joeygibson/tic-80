@@ -6,13 +6,19 @@
 -- version: 0.1
 -- script:  lua
 
+HUD={
+	score=0,
+	level=1
+}
+
 blobby={
 	x=0,
 	y=0,
 	speed=1,
 	vx=0,
 	vy=0,
-	costume=256
+	costume=256,
+	lives=3
 }
 
 slime={
@@ -26,6 +32,17 @@ fruits={}
 
 gravity=0.2
 init=true
+
+function hud()
+	rect(0,0,240,8,0)
+	local w=print("HANGRY BLOBBY!",1,1,5)
+	local w1=print("LEVEL "..HUD.level,w+5,1,4)
+	print("SCORE "..HUD.score,w+w1+10,1,6)
+
+	for num=1,blobby.lives do
+		spr(288,240-(num*8),0,0)
+	end
+end
 
 function collision(px,py,ox,oy)
 	local hitX = false
@@ -50,8 +67,9 @@ function collectFruit()
 	for _,f in ipairs(fruits) do
 		local hit=collision(blobby.x,blobby.y,f.x,f.y)
 		
-		if hit then
+		if hit and f.active then
 			f.active=false
+			HUD.score = HUD.score+1
 		end
 	end
 end
@@ -128,7 +146,7 @@ function moveBlobby()
 end
 
 function checkLimits()
-	if blobby.y<1 then blobby.y=1 end
+	if blobby.y<9 then blobby.y=9 end
 	if blobby.x<1 then blobby.x=231 end
 	if blobby.x>231 then blobby.x=0 end	
 end
@@ -179,6 +197,7 @@ function TIC()
 	t=time()//10
 
 	map(0,0,30,17)
+	hud()
 	drawFruits()
 
 	moveBlobby()
@@ -197,7 +216,7 @@ function randomLocation()
 
 	while solidHere or (blobbyHereX and blobbyHereY) do
 		newX=math.random(4,228)
-		newY=math.random(4,124)
+		newY=math.random(12,124)
 
 		blobbyHereX=blobby.x==newX
 		blobbyHereY=blobby.y==newY
@@ -284,6 +303,7 @@ end
 -- 004:00e2200000de200040dde3fd0d433c000d433c0040dde3fd00de200000e22000
 -- 006:00022e000002e200ff3e220f00c3344000c33440ff3e220f0002e20000022e00
 -- 007:00022e000002ed00df3edd0400c334d000c334d0df3edd040002ed0000022e00
+-- 032:0000000002202200222222202222222002222200002220000002000000000000
 -- 048:000050000005000001111110001111d000011d000001d0000000000000000000
 -- 049:0000000000000000044000000c4000000c44400000cc44000000c40000000000
 -- 050:00005000000500000022200002c2220002222200002220000000000000000000
