@@ -98,7 +98,8 @@ function collision(px,py,ox,oy)
 				hitY=true
 	end
 
-	if hitX and hitY and py<oy then
+	if hitX and hitY and py+2<oy and
+		blobby.vy>0 then
 		return "top hit"
 	elseif hitX and hitY then
 		return "hit"
@@ -223,7 +224,7 @@ function initialize()
 	-- maybe have the type of motion
 	-- be based on the game level
 	addEnemy(352,20,103,"none")
-	addEnemy(352,32,16,"march")
+	addEnemy(352,40,16,"march")
 	addEnemy(352,150,10,"drop")
 	addEnemy(352,20,20,"ai")
 end
@@ -291,6 +292,10 @@ function hitEnemy()
 			blobby.lives=blobby.lives-1
 			blobby.x=230
 			blobby.y=103
+			if e.motion=="ai" then
+				e.x=e.spawnX
+				e.y=e.spawnY
+			end
 		end 
 	end
 end
