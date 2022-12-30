@@ -46,7 +46,9 @@ function addEnemy(costume,x,y,motion)
 		y=y,
 		costume=costume,
 		active=true,
-		motion=motion
+		motion=motion,
+		projectiles={},
+		timer=rnd(1,80)
 	}
 
 	table.insert(enemies,enemy)
@@ -69,6 +71,9 @@ function drawEnemies()
 				c=c+moveAi(e)
 				spr(c+t%60//30,e.x,e.y,0)
 			end
+			
+			e.timer=e.timer+1
+			drawProjectiles(e)
 		else
 			spr(c+5,e.x,e.y,0)
 		end
@@ -249,7 +254,7 @@ function initialize()
 	enemies={}
 	blobby.slimes={}
 	
-	if HUD.level==0 then
+	if HUD.level==0 then -- title screen
 		HUD.mapX=0
 		HUD.mapY=119
 		blobby.x=48
@@ -301,10 +306,10 @@ function initialize()
 		blobby.y=80
 		blobby.lives=3
 		setFruits(15)		
-		addEnemy(368,rnd(20,34),104,"march")
-		addEnemy(368,rnd(200,220),112,"march")
+		addEnemy(352,rnd(20,34),104,"march")
+		addEnemy(352,rnd(200,220),112,"march")
 		addEnemy(368,40,40,"march")
-		addEnemy(368,110,32,"march")
+		addEnemy(384,110,32,"march")
 	elseif HUD.level==4 then
 		HUD.mapX=0
 		HUD.mapY=34
@@ -315,10 +320,12 @@ function initialize()
 		blobby.y=80
 		blobby.lives=3
 		setFruits(15)		
-		addEnemy(368,rnd(10,60),rnd(-50,10),"ai")
-		addEnemy(368,rnd(70,120),rnd(-50,10),"ai")
-		addEnemy(368,rnd(130,180),rnd(-50,10),"ai")
-		addEnemy(368,rnd(190,230),rnd(-50,10),"ai")
+		addEnemy(352,rnd(10,60),rnd(-50,10),"ai")
+		addEnemy(352,rnd(190,230),rnd(-50,10),"ai")
+		addEnemy(368,rnd(20,34),104,"march")
+		addEnemy(368,rnd(200,220),112,"march")
+		addEnemy(384,40,40,"march")
+		addEnemy(384,110,32,"march")
 	--elseif HUD.level==5 then
 		--HUD.mapX=0
 		--HUD.mapY=119
@@ -365,6 +372,7 @@ function TIC()
 		collectFruit()
 		throwSlime()
 		hitEnemy()
+		hitProjectiles()
 		
 		drawBlobby()
 	end
@@ -432,9 +440,17 @@ function moveMarch(sprite)
 	local count=t%500//10	-- 50
 	if count<25 then --move right
 		sprite.x=sprite.spawnX+count
+		if sprite.timer==100 then
+			addProjectile(sprite,1.5)
+			sprite.timer=0
+		end
 		return 2
 	else
 		sprite.x=sprite.spawnX+50-count
+		if sprite.timer==100 then
+			addProjectile(sprite,-1.5)
+			sprite.timer=0
+		end
 		return 0
 	end
 end
@@ -576,6 +592,44 @@ function lose()
 		init=true
 	end
 end
+
+function addProjectile(sprite,speed)
+	local p={
+		costume=sprite.costume+8,
+		x=sprite.x,
+		y=sprite.y,
+		vx=speed,
+		active=true
+	}
+	
+	table.insert(sprite.projectiles,p)
+end
+
+function drawProjectiles(sprite)
+	for _,p in ipairs(sprite.projectiles) do
+		if p.active then
+			p.x=p.x+p.vx
+			spr(p.costume,p.x,p.y,0)
+			if p.x>240 or p.x<0 then
+				p.active=false
+			end
+		end
+	end
+end
+
+function hitProjectiles()
+	for _,e in ipairs(enemies) do
+		for _,p in ipairs(e.projectiles) do
+			hit=collision(blobby.x,blobby.y,p.x,p.y)
+			
+			if hit and p.active and not blobby.invincible then
+				blobby.lives=blobby.lives-1
+				blobby.x=blobby.spawnX
+				blobby.y=blobby.spawnY
+			end
+		end
+	end
+end
 -- <TILES>
 -- 003:bbbbbeeebbbbeeefbbbeeeeebbbeeeeebeeeeeeebeeeeefeeeeeeeeeeeeeeeee
 -- 004:eeeeeeeeeeeeeeeceeeceeeefeeeeeefeeeeeeeeeeeeeceeeeeeeeeeeeeceeee
@@ -674,19 +728,19 @@ end
 -- 098:0c00c0000ccccc00c3cfcfc0333ccccc333cc3333ccc3f3fc10c3333c00c0000
 -- 099:0c00c0000ccccc00c3cfcfc0333ccccc333cc3333ccc3f3fc10c33330c00c000
 -- 101:0000000000000000004444000444444066666666222222223333323304444440
--- 103:00099000000cc00000cccc0000cccc0000cccc0000cccc0000cccc0000cccc00
+-- 104:00099000000cc00000cccc0000cccc0000cccc0000cccc0000cccc0000cccc00
 -- 112:000101000011110000f1f11111111111f1f11111111111110001111100001010
 -- 113:000101000011110000f1f11111111111f1f11111111111110001111100010100
 -- 114:0010100000111100111f1f001111111111111f1f111111111111100001010000
 -- 115:0010100000111100111f1f001111111111111f1f111111111111100000101000
 -- 117:0000000000000033000033440033443333443300443300003300000000000000
--- 119:1110100010100000101010001110100000000100011101010101011001010101
+-- 120:1110100010100000101010001110100000000100011101010101011001010101
 -- 128:022000000ccc00004cfc00000ccccccc0cddcccc0cccccc000cccc0000040400
 -- 129:022000000ccc00004cfc00000ccccccc0cddcccc0cccccc000cccc0000404000
 -- 130:000002200000ccc00000cfc4ccccccc0ccccddc00cccccc000cccc0000404000
 -- 131:000002200000ccc00000cfc4ccccccc0ccccddc00cccccc000cccc0000040400
 -- 133:003330000333330003333300033333000033300000030000000c000000ccc000
--- 135:00cccc000cccccc00cc44cc0cc4444cccc4444ccccc44ccc0cccccc000cccc00
+-- 136:00cccc000cccccc00cc44cc0cc4444cccc4444ccccc44ccc0cccccc000cccc00
 -- </SPRITES>
 
 -- <MAP>
@@ -735,10 +789,10 @@ end
 -- 042:e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9
 -- 043:e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9
 -- 044:e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9414141414141e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9
--- 045:e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9
--- 046:e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e98191a1b1e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9
--- 047:e9e9e9e9e9e9e9e9e9e9e9e941e9e9e9e9e9e9e9e9e9e9e9e9e98292a2b2e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9
--- 048:e9e94141414141e9e9e9e9e94141414141e9e9e94141e9e9e9e98393a3b3e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9
+-- 045:e9e9e9e9e9e9e9e98090a0b0e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9
+-- 046:e9e9e9e9e9e9e9e98191a1b150e9e9e9e9e9e9e9e9e9e9e9e9e98191e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9
+-- 047:e9e9e9e9e9e9e9e98292a2b241e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9
+-- 048:e9e94141414141e98393a3b34141414141e9e9e941410202020202020202e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9
 -- 049:414141414141414141414141414141414141414141414141414141414141e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9
 -- 050:414141414141414141414141414141414141414141414141414141414141e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9
 -- 051:e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9e9
