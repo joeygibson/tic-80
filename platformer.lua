@@ -27,6 +27,35 @@ fruits={}
 gravity=0.2
 init=true
 
+function collision(px,py,ox,oy)
+	local hitX = false
+	local hitY = false
+
+	-- player hit horizontally
+	if (px>ox and px<ox+8) or
+			(px+8>ox and px+8<ox+8) then
+				hitX=true
+	end
+
+	-- player hit vertically
+	if (py>oy and py<oy+8) or
+			(py+8>oy and py+8<oy+8) then
+				hitY=true
+	end
+
+	return hitX and hitY
+end
+
+function collectFruit()
+	for _,f in ipairs(fruits) do
+		local hit=collision(blobby.x,blobby.y,f.x,f.y)
+		
+		if hit then
+			f.active=false
+		end
+	end
+end
+
 function setFruits(count)
 	for c=1,count do
 		local loc=randomLocation()
@@ -128,12 +157,14 @@ function throwSlime()
 end
 
 function initialize()
-	setFruits(100)
+	setFruits(5)
 end
 
 function drawFruits()
 	for _,fruit in ipairs(fruits) do
-		spr(fruit.costume,fruit.x,fruit.y,0)
+		if fruit.active then
+			spr(fruit.costume,fruit.x,fruit.y,0)
+		end
 	end
 end
 
@@ -153,6 +184,7 @@ function TIC()
 	moveBlobby()
 	checkLimits()
 
+	collectFruit()
 	throwSlime()
 	
 	spr(blobby.costume+t%60//30,blobby.x,blobby.y,0)
